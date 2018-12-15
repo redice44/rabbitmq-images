@@ -1,0 +1,48 @@
+version: "3.3"
+
+services:
+  rabbit:
+    image: "rabbitmq:3.7.8-management-alpine"
+    hostname: "rabbit"
+    environment:
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+  producer:
+    build:
+      context: ./producer
+      dockerfile: ./docker/Dockerfile
+    environment:
+      RABBITMQ_USER: "rabbitmq"
+      RABBITMQ_PASS: "rabbitmq"
+      RABBITMQ_URL: "rabbit:5672"
+      RABBITMQ_QUEUE: "my_queue"
+    links:
+      - rabbit
+    volumes:
+      - ./producer:/usr/src/app
+      - producer-node_modules:/usr/src/app/node_modules
+  consumer:
+    build:
+      context: ./consumer
+      dockerfile: ./docker/Dockerfile
+    environment:
+      RABBITMQ_USER: "rabbitmq"
+      RABBITMQ_PASS: "rabbitmq"
+      RABBITMQ_URL: "rabbit:5672"
+      RABBITMQ_QUEUE: "my_queue"
+    links:
+      - rabbit
+    volumes:
+      - ./consumer:/usr/src/app
+      - consumer-node_modules:/usr/src/app/node_modules
+
+volumes:
+  rabbitmq-data:
+  consumer-node_modules:
+  producer-node_modules:
